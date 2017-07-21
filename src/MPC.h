@@ -3,6 +3,9 @@
 
 #include <vector>
 #include "Eigen-3.3/Eigen/Core"
+#include <limits>
+#include <cppad/cppad.hpp>
+#include <cppad/ipopt/solve.hpp>
 
 using namespace std;
 
