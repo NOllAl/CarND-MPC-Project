@@ -20,7 +20,28 @@ The state of the vehicle is a vector consisting of the following components:
 
 The kinematic model used is the following:
 
+![](https://github.com/NOllAl/CarND-MPC-Project/blob/master/Bildschirmfoto%202017-07-24%20um%2007.51.12.png)
 
+The first two are just the solution to Newton's equations without force. The third describes how $psi$ evolves under a steering angle. The fourth one describes the changes in the velocity under accelaration, while the fifth and sixth equation predict the error terms.
+
+The error function to be optimized consists of the following terms:
+
++ Cross track error squared
++ Angle error squared
++ Difference of the velocity from a reference velocity squared: this ensures that the vehicle does not stop
++ Terms for changes in acceleration and steering
++ Product term between acceleration and steering
+
+Finally the further in the future a state is predicted, the less it counts (in an exponentially decreasing way).
+
+## Timestep length
+
+There was no real reasoning behind the choice of the number of timesteps and the duration of each timestep, it was more of a trial and error strategy. Several combinations were tried:
+
++ (N=15, dt=0.1s): without exponential weighting of future terms, this resulted in very bad behavior. With exponetial downweighting, the result was still not good
++ (N=10, dt=0.1s): this was the choice from the classroom and it worked reasonably well
++ (N=10, dt=0.2s): was significantly worse
++ (N=8, dt=0.1s): this is the final choice. It led to fast and secure driving.
 
 
 # CarND-Controls-MPC
