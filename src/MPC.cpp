@@ -81,18 +81,23 @@ public:
 
       // The rest of the constraints
       for (int t = 1; t < N; t++) {
+        // The state at time t+1 .
         AD<double> x1 = vars[x_start + t];
-        AD<double> x0 = vars[x_start + t - 1];
         AD<double> y1 = vars[y_start + t];
-        AD<double> y0 = vars[y_start + t - 1];
         AD<double> psi1 = vars[psi_start + t];
-        AD<double> psi0 = vars[psi_start + t - 1];
         AD<double> v1 = vars[v_start + t];
-        AD<double> v0 = vars[v_start + t - 1];
         AD<double> cte1 = vars[cte_start + t];
-        AD<double> cte0 = vars[cte_start + t - 1];
         AD<double> epsi1 = vars[epsi_start + t];
+
+        // The state at time t.
+        AD<double> x0 = vars[x_start + t - 1];
+        AD<double> y0 = vars[y_start + t - 1];
+        AD<double> psi0 = vars[psi_start + t - 1];
+        AD<double> v0 = vars[v_start + t - 1];
+        AD<double> cte0 = vars[cte_start + t - 1];
         AD<double> epsi0 = vars[epsi_start + t - 1];
+
+        // Actuators
         AD<double> a = vars[a_start + t - 1];
         AD<double> delta = vars[delta_start + t - 1];
         // Deal with latency by taking the previous actuations
@@ -134,13 +139,6 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   bool ok = true;
   typedef CPPAD_TESTVECTOR(double) Dvector;
 
-  double x = state[0];
-  double y = state[1];
-  double psi = state[2];
-  double v = state[3];
-  double cte = state[4];
-  double epsi = state[5];
-
   size_t n_vars = N * 6 + (N - 1) * 2;
   size_t n_constraints = N * 6;
 
@@ -154,19 +152,18 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   Dvector vars_lowerbound(n_vars);
   Dvector vars_upperbound(n_vars);
 
-  // Set the initial variable values
-  vars[x_start] = x;
-  vars[y_start] = y;
-  vars[psi_start] = psi;
-  vars[v_start] = v;
-  vars[cte_start] = cte;
-  vars[epsi_start] = epsi;
+  // Set initial state
+  vars[x_start] = state[0];
+  vars[y_start] = state[1];
+  vars[psi_start] = state[2];
+  vars[v_start] = state[3];
+  vars[cte_start] = state[4];
+  vars[epsi_start] = state[5];
 
-  // Set all non-actuators upper and lowerlimits
-  // to the max negative and positive values.
+  // Non-actuator limits are big
   for (int i = 0; i < delta_start; i++) {
-    vars_lowerbound[i] = -1.0e+17;
-    vars_upperbound[i] = 1.0e+17;
+    vars_lowerbound[i] = -1.0e+10;
+    vars_upperbound[i] = 1.0e+10;
   }
 
   // The upper and lower limits of delta are set to -25 and 25
@@ -192,19 +189,22 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     constraints_lowerbound[i] = 0;
     constraints_upperbound[i] = 0;
   }
-  constraints_lowerbound[x_start] = x;
-  constraints_lowerbound[y_start] = y;
-  constraints_lowerbound[psi_start] = psi;
-  constraints_lowerbound[v_start] = v;
-  constraints_lowerbound[cte_start] = cte;
-  constraints_lowerbound[epsi_start] = epsi;
 
-  constraints_upperbound[x_start] = x;
-  constraints_upperbound[y_start] = y;
-  constraints_upperbound[psi_start] = psi;
-  constraints_upperbound[v_start] = v;
-  constraints_upperbound[cte_start] = cte;
-  constraints_upperbound[epsi_start] = epsi;
+  // Lowerbound constraints
+  constraints_lowerbound[x_start] = state[0];
+  constraints_lowerbound[y_start] = state[1];
+  constraints_lowerbound[psi_start] = state[2];
+  constraints_lowerbound[v_start] = state[3];
+  constraints_lowerbound[cte_start] = state[4];
+  constraints_lowerbound[epsi_start] = state[5];
+
+  // Upperbound constraints
+  constraints_upperbound[x_start] = state[0];
+  constraints_upperbound[y_start] = state[1];
+  constraints_upperbound[psi_start] = state[2];
+  constraints_upperbound[v_start] = state[3];
+  constraints_upperbound[cte_start] = state[4];
+  constraints_upperbound[epsi_start] = state[5];
 
   // object that computes objective and constraints
   FG_eval fg_eval(coeffs);
@@ -245,15 +245,18 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   //
   // {...} is shorthand for creating a vector, so auto x1 = {1.0,2.0}
   // creates a 2 element double vector.
-  vector<double> result;
+  vector<double> final;
 
-  result.push_back(solution.x[delta_start]);
-  result.push_back(solution.x[a_start]);
+  // start
+  final.push_back(solution.x[delta_start]);
+  final.push_back(solution.x[a_start]);
 
+  // Others
   for (int i = 0; i < N-1; i++) {
-    result.push_back(solution.x[x_start + i + 1]);
-    result.push_back(solution.x[y_start + i + 1]);
+    final.push_back(solution.x[x_start + i + 1]);
+    final.push_back(solution.x[y_start + i + 1]);
   }
 
-  return result;
+  // Return
+  return final;
 }
