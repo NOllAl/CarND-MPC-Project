@@ -1,3 +1,28 @@
+# Goal
+
+The goal of this project is to implement an MPC controller in C++ to steer a vehicle around the track in the Udacity simulator.
+
+# Project rubric
+
+## Model
+
+MPC uses a kinematic model to steer the vehicle. It optimizes the actuator input so that the vehicle follows (according to the model described model) a pre-computed trajectory. It then only uses one output of the model to steer the vehicle and repeats this process. 
+The state of the vehicle is a vector consisting of the following components:
+
++ x: the x-coordinate
++ y: the y-coordinate
++ psi: orientation
++ v: velocity
++ cte: cross-track error
++ epsi: angle error
++ a: acceleration actuator
++ delta: steering angle
+
+The kinematic model used is the following:
+
+
+
+
 # CarND-Controls-MPC
 Self-Driving Car Engineer Nanodegree Program
 
