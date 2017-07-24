@@ -1,3 +1,6 @@
+# CarND-Controls-MPC
+Self-Driving Car Engineer Nanodegree Program
+
 # Goal
 
 The goal of this project is to implement an MPC controller in C++ to steer a vehicle around the track in the Udacity simulator.
@@ -43,9 +46,15 @@ There was no real reasoning behind the choice of the number of timesteps and the
 + (N=10, dt=0.2s): was significantly worse
 + (N=8, dt=0.1s): this is the final choice. It led to fast and secure driving.
 
+## Preprocessing of waypoints
 
-# CarND-Controls-MPC
-Self-Driving Car Engineer Nanodegree Program
+The waypoints are transformed into the vehicle's coordinate system (see `main.cpp`, lines 98-104.
+
+## Latency
+
+Latencies of 100ms are dealt with by taking the actuator values of the previous timestep (luckily, the timestep is also 100 ms :) ).
+
+
 
 ---
 
