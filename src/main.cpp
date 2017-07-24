@@ -92,34 +92,39 @@ int main() {
             double psi = j[1]["psi"];
             double v = j[1]["speed"];
 
-            vector<double> waypoints_x;
-            vector<double> waypoints_y;
+            vector<double> waypoints_x(ptsx.size());
+            vector<double> waypoints_y(ptsy.size());
 
-            // transform waypoints to be from car's perspective
-            // this means we can consider px = 0, py = 0, and psi = 0
-            // greatly simplifying future calculations
-            for (int i = 0; i < ptsx.size(); i++) {
-              double dx = ptsx[i] - px;
-              double dy = ptsy[i] - py;
-              waypoints_x.push_back(dx * cos(-psi) - dy * sin(-psi));
-              waypoints_y.push_back(dx * sin(-psi) + dy * cos(-psi));
+            // coordinate transfomration: the x, y and psi coordinates should be as seen from the var's perspectiv
+            for (int j = 0; j<ptsx.size(); j++) {
+              double delta_x = ptsx[j] - px;
+              double delta_y = ptsy[j] - py;
+              waypoints_x[j] = delta_x * cos(-psi) - delta_y * sin(-psi);
+              waypoints_y[j] = delta_x * sin(-psi) + delta_y * cos(-psi);
             }
 
-            double* ptrx = &waypoints_x[0];
-            double* ptry = &waypoints_y[0];
-            Eigen::Map<Eigen::VectorXd> waypoints_x_eig(ptrx, 6);
-            Eigen::Map<Eigen::VectorXd> waypoints_y_eig(ptry, 6);
+            double* ptx = &waypoints_x[0];
+            double* pty = &waypoints_y[0];
 
+            Eigen::Map<Eigen::VectorXd> waypoints_x_eig(ptx, 6);
+            Eigen::Map<Eigen::VectorXd> waypoints_y_eig(pty, 6);
+
+            // Fit polynomial to waypoints
             auto coeffs = polyfit(waypoints_x_eig, waypoints_y_eig, 3);
-            double cte = polyeval(coeffs, 0);  // px = 0, py = 0
-            double epsi = -atan(coeffs[1]);  // p
+            double cte = polyeval(coeffs, 0); // cte is polynomial at 0
+            double epsi = -atan(coeffs[1]); // error in psi
 
+            // Get input
             double steer_value = j[1]["steering_angle"];
             double throttle_value = j[1]["throttle"];
 
+            // Set state and solve
             Eigen::VectorXd state(6);
             state << 0, 0, 0, v, cte, epsi;
             auto vars = mpc.Solve(state, coeffs);
+
+
+            // Steer value and throttle
             steer_value = vars[0];
             throttle_value = vars[1];
 
